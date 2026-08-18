@@ -10,22 +10,37 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.x'
-      - name: Fix Min SDK Version
+      - name: Create Clean Flutter Project and Build
         run: |
+          # إنشاء مشروع مؤقت نظيف بالاسم الحالي
+          flutter create temp_app --org com.example.transferapp
+          
+          # نسخ ملف الـ main.dart الخاص بك إلى المشروع الجديد
+          if [ -f "lib/main.dart" ]; then
+            cp lib/main.dart temp_app/lib/main.dart
+          elif [ -f "transfer_app/lib/main.dart" ]; then
+            cp transfer_app/lib/main.dart temp_app/lib/main.dart
+          fi
+
+          # الدخول لمجلد المشروع المؤقت
+          cd temp_app
+
+          # إضافة مكتبة الاتصال المباشر ومكتبة التخزين في pubspec.yaml تلقائياً
+          echo "  flutter_phone_direct_caller: ^2.1.1" >> pubspec.yaml
+          echo "  shared_preferences: ^2.2.0" >> pubspec.yaml
+
+          # تعديل الحد الأدنى لأندرويد إلى 21 لتجنب أي أخطاء
           file="android/app/build.gradle"
           if [ -f "$file" ]; then
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
             sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
-            sed -i 's/minSdkVersion 19/minSdkVersion 21/g' "$file"
-          else
-            echo "Gradle file not found, skipping fix"
           fi
-      - name: Build APK
-        run: |
+
+          # جلب الحزم وبناء التطبيق
           flutter pub get
           flutter build apk --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: temp_app/build/app/outputs/flutter-apk/app-release.apk
