@@ -12,10 +12,8 @@ jobs:
           flutter-version: '3.19.x'
       - name: Create Clean Flutter Project and Build
         run: |
-          # إنشاء مشروع نظيف
           flutter create temp_app --org com.example.transferapp
           
-          # نسخ ملف الـ main.dart الخاص بك
           if [ -f "lib/main.dart" ]; then
             cp lib/main.dart temp_app/lib/main.dart
           elif [ -f "transfer_app/lib/main.dart" ]; then
@@ -24,19 +22,35 @@ jobs:
 
           cd temp_app
 
-          # إضافة المكتبات بالطريقة الصحيحة تحت قسم dependencies:
-          sed -i '/dependencies:/a \  flutter_phone_direct_caller: ^2.1.1\n  shared_preferences: ^2.2.0' pubspec.yaml
+          # كتابة ملف pubspec.yaml بشكل نظيف ومباشر لتجنب أي أخطاء
+          cat << 'EOF' > pubspec.yaml
+          name: temp_app
+          description: A new Flutter project.
+          publish_to: 'none'
+          version: 1.0.0+1
 
-          # تعديل الحد الأدنى لأندرويد إلى 21 لتجنب أي أخطاء
+          environment:
+            sdk: '>=3.0.0 <4.0.0'
+
+          dependencies:
+            flutter:
+              sdk: flutter
+            flutter_phone_direct_caller: ^2.1.1
+            shared_preferences: ^2.2.0
+
+          flutter:
+            uses-material-design: true
+          EOF
+
+          # تعديل الحد الأدنى لأندرويد إلى 21
           file="android/app/build.gradle"
           if [ -f "$file" ]; then
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
             sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
           fi
 
-          # جلب الحزم وبناء التطبيق
           flutter pub get
-          flutter build apk --release
+          flutter build apk --release --verbose
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
