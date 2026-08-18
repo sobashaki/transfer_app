@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
 void main() {
   runApp(const TransferApp());
@@ -37,10 +38,9 @@ class _TransferPageState extends State<TransferPage> {
   @override
   void initState() {
     super.initState();
-    loadSavedPin(); // استرجاع الرقم السري المحفوظ عند بدء التطبيق
+    loadSavedPin(); 
   }
 
-  // دالة لجلب الرقم السري المحفوظ مسبقاً
   Future<void> loadSavedPin() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -48,7 +48,6 @@ class _TransferPageState extends State<TransferPage> {
     });
   }
 
-  // دالة لحفظ الرقم السري
   Future<void> savePin(String pin) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('saved_pin', pin);
@@ -120,11 +119,27 @@ class _TransferPageState extends State<TransferPage> {
 
   Map<String, dynamic>? selectedAmount;
 
+  // دالة تنفيذ الاتصال المباشر بكود USSD
+  void _executeTransfer() async {
+    String phone = phoneController.text.trim();
+    String pin = pinController.text.trim();
+    String amount = selectedAmount!["base"];
+
+    // الصيغة المطلوبة: *150*1*الرقم السري*1*كمية التحويل*رقم الزبون*تأكيد رقم الزبون#
+    String ussdCode = "*150*1*$pin*1*$amount*$phone*$phone%23";
+
+    try {
+      await FlutterPhoneDirectCaller.callNumber(ussdCode);
+    } catch (e) {
+      print("خطأ في الاتصال: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تطبيق تحويل الرصيد', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('تحويل رصيد', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
@@ -193,7 +208,7 @@ class _TransferPageState extends State<TransferPage> {
                         keyboardType: TextInputType.number,
                         obscureText: true,
                         onChanged: (value) {
-                          savePin(value); // حفظ الرقم تلقائياً بمجرد الكتابة
+                          savePin(value);
                         },
                         decoration: InputDecoration(
                           labelText: 'الرقم السري (رمز التحويل - محفوظ تلقائياً)',
@@ -209,10 +224,10 @@ class _TransferPageState extends State<TransferPage> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: () {
-                          if (phoneController.text.isEmpty || selectedAmount == null) {
+                          if (phoneController.text.isEmpty || pinController.text.isEmpty || selectedAmount == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('الرجاء إدخال رقم الزبون واختيار الفئة!', textAlign: TextAlign.right),
+                                content: Text('الرجاء إدخال رقم الزبون، الرقم السري واختيار الفئة!', textAlign: TextAlign.right),
                                 backgroundColor: Colors.redAccent,
                               ),
                             );
@@ -239,12 +254,8 @@ class _TransferPageState extends State<TransferPage> {
                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('تم إرسال أمر التحويل بنجاح!', textAlign: TextAlign.right),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
+                                    // تنفيذ الاتصال المباشر بالرمز
+                                    _executeTransfer();
                                   },
                                   child: const Text('تأكيد التحويل', style: TextStyle(color: Colors.white)),
                                 ),
