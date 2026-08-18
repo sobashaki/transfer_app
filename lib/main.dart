@@ -274,7 +274,40 @@ class _TransferPageState extends State<TransferPage> {
               ),
             ),
           ),
-        ),
+        ),name: Build Flutter APK
+on:
+  push:
+    branches: [ main, master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+      - name: Find and Build
+        run: |
+          # البحث عن مكان وجود ملف pubspec.yaml والتحويل إليه تلقائياً
+          PROJECT_DIR=$(find . -name "pubspec.yaml" -maxdepth 3 -exec dirname {} \;)
+          echo "Found project at: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          
+          # إصدار الـ SDK تلقائياً
+          file="android/app/build.gradle"
+          if [ -f "$file" ]; then
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
+            sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
+            sed -i 's/minSdkVersion 19/minSdkVersion 21/g' "$file"
+          fi
+          
+          flutter pub get
+          flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: '**/build/app/outputs/flutter-apk/app-release.apk'
       ),
     );
   }
