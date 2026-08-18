@@ -27,3 +27,7 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_phone_direct_caller: ^2.1.1
