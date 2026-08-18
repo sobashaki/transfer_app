@@ -20,6 +20,7 @@ jobs:
         run: |
           flutter create . --platforms=android
           flutter pub add shared_preferences
+          flutter pub add flutter_phone_direct_caller
           flutter build apk --release
 
       - name: Upload APK
@@ -27,7 +28,3 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-dependencies:
-  flutter:
-    sdk: flutter
-  flutter_phone_direct_caller: ^2.1.1
