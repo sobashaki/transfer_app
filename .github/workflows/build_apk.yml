@@ -12,7 +12,7 @@ jobs:
           flutter-version: '3.19.6'
           cache: true
 
-      - name: Build App Complete
+      - name: Build App Fixed
         run: |
           flutter create my_transfer_app --org com.example.app
           mkdir -p my_transfer_app/assets
@@ -37,6 +37,10 @@ jobs:
           EOF
 
           sed -i 's/android:label="my_transfer_app"/android:label="تحويل رصيد سيرياتيل"/g' android/app/src/main/AndroidManifest.xml
+          
+          # التعديل الجذري لضبط إصدار الأندرويد
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 16/minSdkVersion 21/g' android/app/build.gradle
 
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -83,7 +87,6 @@ jobs:
               String base = amountController.text;
               String phone = phoneController.text;
               String pin = pinController.text;
-              // الكود حسب طلبك: *150*1*الرقم السري*1*كمية التحويل*رقم الزبون*رقم الزبون#
               String ussd = "*150*1*$pin*1*$base*$phone*$phone%23";
               await FlutterPhoneDirectCaller.callNumber(ussd);
             }
@@ -99,7 +102,7 @@ jobs:
                     items: prices.map((p) => DropdownMenuItem(value: p, child: Text('فئة ${p['base']} ل.س (تصبح ${p['taxed']} ل.س)'))).toList(),
                     onChanged: (v) => setState(() => amountController.text = v!['base']!),
                   ),
-                  TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'كمية التحويل (القيمة الأساسية)')),
+                  TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'كمية التحويل')),
                   TextField(controller: pinController, obscureText: true, onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v)), decoration: const InputDecoration(labelText: 'الرقم السري')),
                   const SizedBox(height: 20),
                   ElevatedButton(onPressed: _execute, child: const Text('تنفيذ التحويل'))
@@ -108,9 +111,9 @@ jobs:
             }
           }
           EOF
+
           flutter pub get
           dart run flutter_launcher_icons
-          sed -i 's/minSdkVersion 16/minSdkVersion 21/g' android/app/build.gradle
           flutter build apk --release
 
       - name: Upload APK
