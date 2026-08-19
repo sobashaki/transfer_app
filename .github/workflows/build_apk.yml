@@ -13,13 +13,20 @@ jobs:
           flutter-version: '3.19.6'
           cache: true
 
-      - name: Build App From Scratch
+      - name: Build App With Custom Icon
         run: |
-          # 1. إنشاء مشروع فلاتر جديد نظيف تماماً
+          # 1. إنشاء مشروع فلاتر نظيف
           flutter create my_transfer_app --org com.example.app
+          
+          # 2. نسخ الأيقونة التي رفعتها إلى داخل المشروع المؤقت
+          mkdir -p my_transfer_app/assets
+          if [ -f "icon.png" ]; then
+            cp icon.png my_transfer_app/assets/icon.png
+          fi
+
           cd my_transfer_app
 
-          # 2. إضافة المكتبات المطلوبة مباشرة إلى ملف pubspec.yaml
+          # 3. إعداد pubspec.yaml مع إضافة مكتبة تخصيص الأيقونات
           cat << 'EOF' > pubspec.yaml
           name: my_transfer_app
           description: A new Flutter project.
@@ -35,11 +42,19 @@ jobs:
             flutter_phone_direct_caller: ^2.1.1
             shared_preferences: ^2.2.0
 
+          dev_dependencies:
+            flutter_launcher_icons: ^0.13.1
+
+          flutter_launcher_icons:
+            android: "launcher_icon"
+            image_path: "assets/icon.png"
+            min_sdk_android: 21
+
           flutter:
             uses-material-design: true
           EOF
 
-          # 3. وضع الكود البرمجي الخاص بك (main.dart) مباشرة داخل المشروع
+          # 4. كتابة كود التطبيق الأساسي (main.dart)
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'package:shared_preferences/shared_preferences.dart';
@@ -317,15 +332,16 @@ jobs:
           }
           EOF
 
-          # 4. تعديل إعدادات أندرويد لضمان عدم حدوث أي خطأ في إصدار SDK
+          # 5. جلب الحزم، تطبيق الأيقونة تلقائياً، وتعديل إعدادات أندرويد وبناء التطبيق
+          flutter pub get
+          dart run flutter_launcher_icons
+
           file="android/app/build.gradle"
           if [ -f "$file" ]; then
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
             sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
           fi
 
-          # 5. جلب الحزم وبناء ملف الـ APK النهائي
-          flutter pub get
           flutter build apk --release
 
       - name: Upload APK
