@@ -16,9 +16,7 @@ jobs:
         run: |
           flutter create my_transfer_app --org com.example.app
           cd my_transfer_app
-
-          # ضبط اسم التطبيق
-          sed -i 's/android:label="my_transfer_app"/android:label="تحويل سيرياتيل"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="my_transfer_app"/android:label="تحويل رصيد"/g' android/app/src/main/AndroidManifest.xml
 
           cat << 'EOF' > pubspec.yaml
           name: my_transfer_app
@@ -30,8 +28,7 @@ jobs:
             flutter_phone_direct_caller: ^2.1.1
             shared_preferences: ^2.2.0
             flutter_launcher_icons: ^0.13.1
-          flutter: 
-            uses-material-design: true
+          flutter: {uses-material-design: true}
           EOF
 
           cat << 'EOF' > flutter_launcher_icons.yaml
@@ -53,7 +50,7 @@ jobs:
           class _TransferPageState extends State<TransferPage> {
             final TextEditingController phoneController = TextEditingController();
             final TextEditingController pinController = TextEditingController();
-            final TextEditingController amountController = TextEditingController();
+            String selectedBaseAmount = "";
             
             final List<Map<String, String>> prices = [
               {"base": "1.92", "label": "1.92 (2 ل.س)"}, {"base": "2.88", "label": "2.88 (3 ل.س)"}, {"base": "3.84", "label": "3.84 (4 ل.س)"}, {"base": "4.80", "label": "4.80 (5 ل.س)"}, {"base": "5.76", "label": "5.76 (6 ل.س)"},
@@ -72,27 +69,44 @@ jobs:
             void initState() { super.initState(); SharedPreferences.getInstance().then((p) => setState(() => pinController.text = p.getString('pin') ?? '')); }
 
             void _execute() async {
-              String ussd = "*150*1*${pinController.text}*1*${amountController.text}*${phoneController.text}*${phoneController.text}%23";
+              String ussd = "*150*1*${pinController.text}*1*$selectedBaseAmount*${phoneController.text}*${phoneController.text}%23";
               await FlutterPhoneDirectCaller.callNumber(ussd);
             }
 
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                appBar: AppBar(title: const Text('تحويل سيرياتيل')),
-                body: Padding(padding: const EdgeInsets.all(15), child: Column(children: [
-                  TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'رقم الزبون'), keyboardType: TextInputType.phone),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    hint: const Text("اختر من القائمة"),
-                    items: prices.map((p) => DropdownMenuItem(value: p['base'], child: Text(p['label']!))).toList(),
-                    onChanged: (v) => setState(() => amountController.text = v!),
+                backgroundColor: const Color(0xFFF2F2F7),
+                appBar: AppBar(title: const Text('تحويل رصيد'), backgroundColor: const Color(0xFF009688), centerTitle: true),
+                body: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(children: [
+                          const Icon(Icons.exit_to_app, size: 80, color: Color(0xFF009688)),
+                          const SizedBox(height: 10),
+                          const Text("اختر فئة التعبئة المطلوبة", style: TextStyle(fontSize: 18, color: Color(0xFF009688), fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 20),
+                          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'رقم هاتف الزبون', prefixIcon: Icon(Icons.phone_android), border: OutlineInputBorder()), keyboardType: TextInputType.phone),
+                          const SizedBox(height: 15),
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(labelText: 'فئة التعبئة (السعر بعد الضرائب)', prefixIcon: Icon(Icons.account_balance_wallet), border: OutlineInputBorder()),
+                            items: prices.map((p) => DropdownMenuItem(value: p['base'], child: Text(p['label']!))).toList(),
+                            onChanged: (v) => setState(() => selectedBaseAmount = v!),
+                          ),
+                          const SizedBox(height: 15),
+                          TextField(controller: pinController, obscureText: true, decoration: const InputDecoration(labelText: 'الرقم السري (محفوظ تلقائياً)', prefixIcon: Icon(Icons.lock), border: OutlineInputBorder()), onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v))),
+                          const SizedBox(height: 20),
+                          SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: _execute, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF009688)), child: const Text('تنفيذ التحويل', style: TextStyle(color: Colors.white, fontSize: 18))))
+                        ]),
+                      ),
+                    ),
                   ),
-                  TextField(controller: amountController, decoration: const InputDecoration(labelText: 'قيمة التحويل'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-                  TextField(controller: pinController, obscureText: true, decoration: const InputDecoration(labelText: 'الرقم السري'), onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v))),
-                  const SizedBox(height: 20),
-                  ElevatedButton(onPressed: _execute, child: const Text('تنفيذ التحويل'))
-                ])),
+                ),
               );
             }
           }
