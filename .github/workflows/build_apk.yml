@@ -44,23 +44,19 @@ jobs:
             final TextEditingController amountController = TextEditingController();
             
             final List<Map<String, String>> prices = [
-              {"base": "1.92", "label": "فئة 1.92 (2 ل.س)"}, {"base": "2.88", "label": "فئة 2.88 (3 ل.س)"}, {"base": "3.84", "label": "فئة 3.84 (4 ل.س)"}, {"base": "4.80", "label": "فئة 4.80 (5 ل.س)"}, {"base": "5.76", "label": "فئة 5.76 (6 ل.س)"},
-              {"base": "9.61", "label": "فئة 9.61 (10 ل.س)"}, {"base": "20.19", "label": "فئة 20.19 (21 ل.س)"}, {"base": "23.07", "label": "فئة 23.07 (24 ل.س)"}, {"base": "24.03", "label": "فئة 24.03 (25 ل.س)"}, {"base": "25.96", "label": "فئة 25.96 (27 ل.س)"},
-              {"base": "30.76", "label": "فئة 30.76 (32 ل.س)"}, {"base": "40.38", "label": "فئة 40.38 (42 ل.س)"}, {"base": "45.19", "label": "فئة 45.19 (47 ل.س)"}, {"base": "48.07", "label": "فئة 48.07 (50 ل.س)"}, {"base": "52.88", "label": "فئة 52.88 (55 ل.س)"},
-              {"base": "62.5", "label": "فئة 62.5 (65 ل.س)"}, {"base": "68.26", "label": "فئة 68.26 (71 ل.س)"}, {"base": "72.11", "label": "فئة 72.11 (75 ل.س)"}, {"base": "77.88", "label": "فئة 77.88 (81 ل.س)"}, {"base": "81.73", "label": "فئة 81.73 (85 ل.س)"},
-              {"base": "86.53", "label": "فئة 86.53 (90 ل.س)"}, {"base": "96.15", "label": "فئة 96.15 (100 ل.س)"}, {"base": "100.96", "label": "فئة 100.96 (105 ل.س)"}, {"base": "105.76", "label": "فئة 105.76 (110 ل.س)"}, {"base": "115.38", "label": "فئة 115.38 (120 ل.س)"},
-              {"base": "125", "label": "فئة 125 (130 ل.س)"}, {"base": "130.76", "label": "فئة 130.76 (136 ل.س)"}, {"base": "144.23", "label": "فئة 144.23 (150 ل.س)"}, {"base": "160.57", "label": "فئة 160.57 (167 ل.س)"}, {"base": "163.46", "label": "فئة 163.46 (170 ل.س)"},
-              {"base": "173.07", "label": "فئة 173.07 (180 ل.س)"}, {"base": "183.65", "label": "فئة 183.65 (191 ل.س)"}, {"base": "192.30", "label": "فئة 192.30 (200 ل.س)"}, {"base": "211.53", "label": "فئة 211.53 (220 ل.س)"}, {"base": "240.38", "label": "فئة 240.38 (250 ل.س)"},
-              {"base": "288.46", "label": "فئة 288.46 (300 ل.س)"}, {"base": "317.30", "label": "فئة 317.30 (330 ل.س)"}, {"base": "370.19", "label": "فئة 370.19 (385 ل.س)"}, {"base": "432.69", "label": "فئة 432.69 (450 ل.س)"}, {"base": "480.76", "label": "فئة 480.76 (500 ل.س)"},
-              {"base": "576.92", "label": "فئة 576.92 (600 ل.س)"}, {"base": "625.00", "label": "فئة 625.00 (650 ل.س)"}, {"base": "721.15", "label": "فئة 721.15 (750 ل.س)"}, {"base": "769.23", "label": "فئة 769.23 (800 ل.س)"}, {"base": "951.92", "label": "فئة 951.92 (990 ل.س)"},
-              {"base": "1057.69", "label": "فئة 1057.69 (1100 ل.س)"}, {"base": "1250.00", "label": "فئة 1250.00 (1300 ل.س)"}, {"base": "1923.07", "label": "فئة 1923.07 (2000 ل.س)"}, {"base": "2115.38", "label": "فئة 2115.38 (2200 ل.س)"}, {"base": "2403.84", "label": "فئة 2403.84 (2500 ل.س)"}, {"base": "3846.15", "label": "فئة 3846.15 (4000 ل.س)"}
+              {"base": "1.92", "label": "1.92 (2 ل.س)"}, {"base": "2.88", "label": "2.88 (3 ل.س)"}, {"base": "3.84", "label": "3.84 (4 ل.س)"}, {"base": "4.80", "label": "4.80 (5 ل.س)"}, {"base": "5.76", "label": "5.76 (6 ل.س)"},
+              {"base": "9.61", "label": "9.61 (10 ل.س)"}, {"base": "20.19", "label": "20.19 (21 ل.س)"}, {"base": "23.07", "label": "23.07 (24 ل.س)"}, {"base": "24.03", "label": "24.03 (25 ل.س)"}, {"base": "25.96", "label": "25.96 (27 ل.س)"},
+              {"base": "30.76", "label": "30.76 (32 ل.س)"}, {"base": "40.38", "label": "40.38 (42 ل.س)"}, {"base": "45.19", "label": "45.19 (47 ل.س)"}, {"base": "48.07", "label": "48.07 (50 ل.س)"}, {"base": "52.88", "label": "52.88 (55 ل.س)"},
+              {"base": "62.5", "label": "62.5 (65 ل.س)"}, {"base": "68.26", "label": "68.26 (71 ل.س)"}, {"base": "72.11", "label": "72.11 (75 ل.س)"}, {"base": "77.88", "label": "77.88 (81 ل.س)"}, {"base": "81.73", "label": "81.73 (85 ل.س)"},
+              {"base": "86.53", "label": "86.53 (90 ل.س)"}, {"base": "96.15", "label": "96.15 (100 ل.س)"}, {"base": "100.96", "label": "100.96 (105 ل.س)"}, {"base": "105.76", "label": "105.76 (110 ل.س)"}, {"base": "115.38", "label": "115.38 (120 ل.س)"},
+              {"base": "125", "label": "125 (130 ل.س)"}, {"base": "130.76", "label": "130.76 (136 ل.س)"}, {"base": "144.23", "label": "144.23 (150 ل.س)"}, {"base": "160.57", "label": "160.57 (167 ل.س)"}, {"base": "163.46", "label": "163.46 (170 ل.س)"},
+              {"base": "173.07", "label": "173.07 (180 ل.س)"}, {"base": "183.65", "label": "183.65 (191 ل.س)"}, {"base": "192.30", "label": "192.30 (200 ل.س)"}, {"base": "211.53", "label": "211.53 (220 ل.س)"}, {"base": "240.38", "label": "240.38 (250 ل.س)"},
+              {"base": "288.46", "label": "288.46 (300 ل.س)"}, {"base": "317.30", "label": "317.30 (330 ل.س)"}, {"base": "370.19", "label": "370.19 (385 ل.س)"}, {"base": "432.69", "label": "432.69 (450 ل.س)"}, {"base": "480.76", "label": "480.76 (500 ل.س)"},
+              {"base": "576.92", "label": "576.92 (600 ل.س)"}, {"base": "625.00", "label": "625.00 (650 ل.س)"}, {"base": "721.15", "label": "721.15 (750 ل.س)"}, {"base": "769.23", "label": "769.23 (800 ل.س)"}, {"base": "951.92", "label": "951.92 (990 ل.س)"},
+              {"base": "1057.69", "label": "1057.69 (1100 ل.س)"}, {"base": "1250.00", "label": "1250.00 (1300 ل.س)"}, {"base": "1923.07", "label": "1923.07 (2000 ل.س)"}, {"base": "2115.38", "label": "2115.38 (2200 ل.س)"}, {"base": "2403.84", "label": "2403.84 (2500 ل.س)"}, {"base": "3846.15", "label": "3846.15 (4000 ل.س)"}
             ];
 
-            @override
-            void initState() { super.initState(); SharedPreferences.getInstance().then((p) => setState(() => pinController.text = p.getString('pin') ?? '')); }
-
             void _execute() async {
-              // الكود: *150*1*السري*1*القيمة*الرقم*تأكيد الرقم#
               String ussd = "*150*1*${pinController.text}*1*${amountController.text}*${phoneController.text}*${phoneController.text}%23";
               await FlutterPhoneDirectCaller.callNumber(ussd);
             }
@@ -68,20 +64,20 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                appBar: AppBar(title: const Text('تحويل سيرياتيل')),
-                body: Padding(padding: const EdgeInsets.all(15), child: SingleChildScrollView(child: Column(children: [
+                appBar: AppBar(title: const Text('تحويل رصيد')),
+                body: ListView(padding: const EdgeInsets.all(15), children: [
                   TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'رقم الزبون'), keyboardType: TextInputType.phone),
-                  DropdownButtonFormField<Map<String, String>>(
+                  DropdownButtonFormField<String>(
                     isExpanded: true,
-                    hint: const Text("اختر فئة من القائمة"),
-                    items: prices.map((p) => DropdownMenuItem(value: p, child: Text(p['label']!))).toList(),
-                    onChanged: (v) => setState(() => amountController.text = v!['base']!),
+                    hint: const Text("اختر من القائمة"),
+                    items: prices.map((p) => DropdownMenuItem(value: p['base'], child: Text(p['label']!))).toList(),
+                    onChanged: (v) => setState(() => amountController.text = v!),
                   ),
-                  TextField(controller: amountController, decoration: const InputDecoration(labelText: 'قيمة التحويل الأساسية'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-                  TextField(controller: pinController, obscureText: true, decoration: const InputDecoration(labelText: 'الرقم السري'), onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v))),
+                  TextField(controller: amountController, decoration: const InputDecoration(labelText: 'كمية التحويل'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                  TextField(controller: pinController, obscureText: true, decoration: const InputDecoration(labelText: 'الرقم السري')),
                   const SizedBox(height: 20),
                   ElevatedButton(onPressed: _execute, child: const Text('تنفيذ التحويل'))
-                ]))),
+                ]),
               );
             }
           }
