@@ -1,314 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'dart:convert';
 
-void main() {
-  runApp(const TransferApp());
-}
+void main() => runApp(const MaterialApp(home: TransferPage(), debugShowCheckedModeBanner: false));
 
-class TransferApp extends StatelessWidget {
-  const TransferApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-      ),
-      home: const Directionality(
-        textDirection: TextDirection.rtl,
-        child: TransferPage(),
-      ),
-    );
-  }
-}
-
-class TransferPage extends StatefulWidget {
-  const TransferPage({super.key});
-
-  @override
-  State<TransferPage> createState() => _TransferPageState();
-}
+class TransferPage extends StatefulWidget { const TransferPage({super.key}); @override State<TransferPage> createState() => _TransferPageState(); }
 
 class _TransferPageState extends State<TransferPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController pinController = TextEditingController();
+  String selectedBaseAmount = "";
+  List<String> history = [];
+
+  final List<Map<String, String>> prices = [
+    {"base": "1.92", "label": "1.92 (2 ل.س)"}, {"base": "2.88", "label": "2.88 (3 ل.س)"}, {"base": "3.84", "label": "3.84 (4 ل.س)"}, {"base": "4.80", "label": "4.80 (5 ل.س)"}, {"base": "5.76", "label": "5.76 (6 ل.س)"},
+    {"base": "9.61", "label": "9.61 (10 ل.س)"}, {"base": "20.19", "label": "20.19 (21 ل.س)"}, {"base": "23.07", "label": "23.07 (24 ل.س)"}, {"base": "24.03", "label": "24.03 (25 ل.س)"}, {"base": "25.96", "label": "25.96 (27 ل.س)"},
+    {"base": "30.76", "label": "30.76 (32 ل.س)"}, {"base": "40.38", "label": "40.38 (42 ل.س)"}, {"base": "45.19", "label": "45.19 (47 ل.س)"}, {"base": "48.07", "label": "48.07 (50 ل.س)"}, {"base": "52.88", "label": "52.88 (55 ل.س)"},
+    {"base": "62.5", "label": "62.5 (65 ل.س)"}, {"base": "68.26", "label": "68.26 (71 ل.س)"}, {"base": "72.11", "label": "72.11 (75 ل.س)"}, {"base": "77.88", "label": "77.88 (81 ل.س)"}, {"base": "81.73", "label": "81.73 (85 ل.س)"},
+    {"base": "86.53", "label": "86.53 (90 ل.س)"}, {"base": "96.15", "label": "96.15 (100 ل.س)"}, {"base": "100.96", "label": "100.96 (105 ل.س)"}, {"base": "105.76", "label": "105.76 (110 ل.س)"}, {"base": "115.38", "label": "115.38 (120 ل.س)"},
+    {"base": "125", "label": "125 (130 ل.س)"}, {"base": "130.76", "label": "130.76 (136 ل.س)"}, {"base": "144.23", "label": "144.23 (150 ل.س)"}, {"base": "160.57", "label": "160.57 (167 ل.س)"}, {"base": "163.46", "label": "163.46 (170 ل.س)"},
+    {"base": "173.07", "label": "173.07 (180 ل.س)"}, {"base": "183.65", "label": "183.65 (191 ل.س)"}, {"base": "192.30", "label": "192.30 (200 ل.س)"}, {"base": "211.53", "label": "211.53 (220 ل.س)"}, {"base": "240.38", "label": "240.38 (250 ل.س)"},
+    {"base": "288.46", "label": "288.46 (300 ل.س)"}, {"base": "317.30", "label": "317.30 (330 ل.س)"}, {"base": "370.19", "label": "370.19 (385 ل.س)"}, {"base": "432.69", "label": "432.69 (450 ل.س)"}, {"base": "480.76", "label": "480.76 (500 ل.س)"},
+    {"base": "576.92", "label": "576.92 (600 ل.س)"}, {"base": "625.00", "label": "625.00 (650 ل.س)"}, {"base": "721.15", "label": "721.15 (750 ل.س)"}, {"base": "769.23", "label": "769.23 (800 ل.س)"}, {"base": "951.92", "label": "951.92 (990 ل.س)"},
+    {"base": "1057.69", "label": "1057.69 (1100 ل.س)"}, {"base": "1250.00", "label": "1250.00 (1300 ل.س)"}, {"base": "1923.07", "label": "1923.07 (2000 ل.س)"}, {"base": "2115.38", "label": "2115.38 (2200 ل.س)"}, {"base": "2403.84", "label": "2403.84 (2500 ل.س)"}, {"base": "3846.15", "label": "3846.15 (4000 ل.س)"}
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    loadSavedPin(); 
-  }
+  void initState() { super.initState(); _loadData(); }
 
-  Future<void> loadSavedPin() async {
+  void _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      pinController.text = prefs.getString('saved_pin') ?? '';
+      pinController.text = prefs.getString('pin') ?? '';
+      history = prefs.getStringList('history') ?? [];
     });
   }
 
-  Future<void> savePin(String pin) async {
+  void _execute() async {
+    String ussd = "*150*1*${pinController.text}*1*$selectedBaseAmount*${phoneController.text}*${phoneController.text}%23";
+    await FlutterPhoneDirectCaller.callNumber(ussd);
+    
+    // حفظ في السجل
+    String entry = "${DateTime.now().toString().substring(0, 16)} | رقم: ${phoneController.text} | قيمة: $selectedBaseAmount";
+    history.insert(0, entry);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('saved_pin', pin);
-  }
-
-  final List<Map<String, dynamic>> prices = [
-    {"base": "1.92", "taxed": "2 ل.س"},
-    {"base": "2.88", "taxed": "3 ل.س"},
-    {"base": "3.84", "taxed": "4 ل.س"},
-    {"base": "4.80", "taxed": "5 ل.س"},
-    {"base": "5.76", "taxed": "6 ل.س"},
-    {"base": "9.61", "taxed": "10 ل.س"},
-    {"base": "20.19", "taxed": "21 ل.س"},
-    {"base": "23.07", "taxed": "24 ل.س"},
-    {"base": "24.03", "taxed": "25 ل.س"},
-    {"base": "25.96", "taxed": "27 ل.س"},
-    {"base": "30.76", "taxed": "32 ل.س"},
-    {"base": "40.38", "taxed": "42 ل.س"},
-    {"base": "45.19", "taxed": "47 ل.س"},
-    {"base": "48.07", "taxed": "50 ل.س"},
-    {"base": "52.88", "taxed": "55 ل.س"},
-    {"base": "62.5", "taxed": "65 ل.س"},
-    {"base": "68.26", "taxed": "71 ل.س"},
-    {"base": "72.11", "taxed": "75 ل.س"},
-    {"base": "77.88", "taxed": "81 ل.س"},
-    {"base": "81.73", "taxed": "85 ل.س"},
-    {"base": "86.53", "taxed": "90 ل.س"},
-    {"base": "96.15", "taxed": "100 ل.س"},
-    {"base": "100.96", "taxed": "105 ل.س"},
-    {"base": "105.76", "taxed": "110 ل.س"},
-    {"base": "115.38", "taxed": "120 ل.س"},
-    {"base": "125", "taxed": "130 ل.س"},
-    {"base": "130.76", "taxed": "136 ل.س"},
-    {"base": "144.23", "taxed": "150 ل.س"},
-    {"base": "160.57", "taxed": "167 ل.س"},
-    {"base": "163.46", "taxed": "170 ل.س"},
-    {"base": "173.07", "taxed": "180 ل.س"},
-    {"base": "183.65", "taxed": "191 ل.س"},
-    {"base": "192.30", "taxed": "200 ل.س"},
-    {"base": "211.53", "taxed": "220 ل.س"},
-    {"base": "240.38", "taxed": "250 ل.س"},
-    {"base": "288.46", "taxed": "300 ل.س"},
-    {"base": "317.30", "taxed": "330 ل.س"},
-    {"base": "370.19", "taxed": "385 ل.س"},
-    {"base": "432.69", "taxed": "450 ل.س"},
-    {"base": "480.76", "taxed": "500 ل.س"},
-    {"base": "576.92", "taxed": "600 ل.س"},
-    {"base": "625.00", "taxed": "625.00 ل.س"},
-    {"base": "650", "taxed": "650 ل.س"},
-    {"base": "721.15", "taxed": "721.15 ل.س"},
-    {"base": "750", "taxed": "750 ل.س"},
-    {"base": "769.23", "taxed": "769.23 ل.س"},
-    {"base": "800", "taxed": "800 ل.س"},
-    {"base": "951.92", "taxed": "951.92 ل.س"},
-    {"base": "990", "taxed": "990 ل.س"},
-    {"base": "1057.69", "taxed": "1057.69 ل.س"},
-    {"base": "1,100", "taxed": "1,100 ل.س"},
-    {"base": "1250.00", "taxed": "1250.00 ل.س"},
-    {"base": "1,300", "taxed": "1,300 ل.س"},
-    {"base": "1923.07", "taxed": "1923.07 ل.س"},
-    {"base": "2,000", "taxed": "2,000 ل.س"},
-    {"base": "2115.38", "taxed": "2115.38 ل.س"},
-    {"base": "2,200", "taxed": "2,200 ل.س"},
-    {"base": "2403.84", "taxed": "2403.84 ل.س"},
-    {"base": "2,500", "taxed": "2,500 ل.س"},
-    {"base": "3846.15", "taxed": "3846.15 ل.س"},
-    {"base": "4,000", "taxed": "4,000 ل.س"}
-  ];
-
-  Map<String, dynamic>? selectedAmount;
-
-  // دالة تنفيذ الاتصال المباشر بكود USSD
-  void _executeTransfer() async {
-    String phone = phoneController.text.trim();
-    String pin = pinController.text.trim();
-    String amount = selectedAmount!["base"];
-
-    // الصيغة المطلوبة: *150*1*الرقم السري*1*كمية التحويل*رقم الزبون*تأكيد رقم الزبون#
-    String ussdCode = "*150*1*$pin*1*$amount*$phone*$phone%23";
-
-    try {
-      await FlutterPhoneDirectCaller.callNumber(ussdCode);
-    } catch (e) {
-      print("خطأ في الاتصال: $e");
-    }
+    await prefs.setStringList('history', history);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تحويل رصيد', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        color: Colors.grey[100],
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              child: Padding(
-                padding: const EdgeInsets.all(25.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Icon(Icons.send_to_mobile, size: 70, color: Colors.teal),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'اختر فئة التعبئة المطلوبة',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
-                      ),
-                      const SizedBox(height: 30),
-                      TextField(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          labelText: 'رقم هاتف الزبون',
-                          prefixIcon: const Icon(Icons.phone_android, color: Colors.teal),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      DropdownButtonFormField<Map<String, dynamic>>(
-                        decoration: InputDecoration(
-                          labelText: 'فئة التعبئة (السعر بعد الضرائب)',
-                          prefixIcon: const Icon(Icons.account_balance_wallet, color: Colors.teal),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        isExpanded: true,
-                        hint: const Text('اضغط لاختيار الفئة...'),
-                        menuMaxHeight: 350,
-                        items: prices.map((item) {
-                          return DropdownMenuItem<Map<String, dynamic>>(
-                            value: item,
-                            child: Text(
-                              'فئة التعبئة: ${item["base"]}  |  بعد الضرائب: ${item["taxed"]}',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedAmount = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: pinController,
-                        keyboardType: TextInputType.number,
-                        obscureText: true,
-                        onChanged: (value) {
-                          savePin(value);
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'الرقم السري (رمز التحويل - محفوظ تلقائياً)',
-                          prefixIcon: const Icon(Icons.lock_outline, color: Colors.teal),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(height: 35),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.teal,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          if (phoneController.text.isEmpty || pinController.text.isEmpty || selectedAmount == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('الرجاء إدخال رقم الزبون، الرقم السري واختيار الفئة!', textAlign: TextAlign.right),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-                            return;
-                          }
-
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                              title: const Text('تأكيد العملية', textAlign: TextAlign.center, style: TextStyle(color: Colors.teal)),
-                              content: Text(
-                                'سيتم تحويل فئة التعبئة: ${selectedAmount!["base"]}\nإلى الرقم: ${phoneController.text}\n\nالسعر بعد إضافة الضرائب: ${selectedAmount!["taxed"]}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 16, height: 1.5),
-                              ),
-                              actionsAlignment: MainAxisAlignment.spaceAround,
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    // تنفيذ الاتصال المباشر بالرمز
-                                    _executeTransfer();
-                                  },
-                                  child: const Text('تأكيد التحويل', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'تنفيذ التحويل',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),name: Build Flutter APK
-on:
-  push:
-    branches: [ main, master ]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.x'
-      - name: Find and Build
-        run: |
-          # البحث عن مكان وجود ملف pubspec.yaml والتحويل إليه تلقائياً
-          PROJECT_DIR=$(find . -name "pubspec.yaml" -maxdepth 3 -exec dirname {} \;)
-          echo "Found project at: $PROJECT_DIR"
-          cd "$PROJECT_DIR"
-          
-          # إصدار الـ SDK تلقائياً
-          file="android/app/build.gradle"
-          if [ -f "$file" ]; then
-            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
-            sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
-            sed -i 's/minSdkVersion 19/minSdkVersion 21/g' "$file"
-          fi
-          
-          flutter pub get
-          flutter build apk --release
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: '**/build/app/outputs/flutter-apk/app-release.apk'
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(title: const Text('تحويل رصيد'), backgroundColor: const Color(0xFF009688), actions: [IconButton(icon: const Icon(Icons.history), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HistoryPage(history: history))))]),
+      body: Center(
+        child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Card(elevation: 5, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [
+          const Icon(Icons.exit_to_app, size: 80, color: Color(0xFF009688)),
+          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'رقم هاتف الزبون', prefixIcon: Icon(Icons.phone_android)), keyboardType: TextInputType.phone),
+          DropdownButtonFormField<String>(decoration: const InputDecoration(labelText: 'فئة التعبئة'), items: prices.map((p) => DropdownMenuItem(value: p['base'], child: Text(p['label']!))).toList(), onChanged: (v) => setState(() => selectedBaseAmount = v!)),
+          TextField(controller: pinController, obscureText: true, decoration: const InputDecoration(labelText: 'الرقم السري', prefixIcon: Icon(Icons.lock)), onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v))),
+          const SizedBox(height: 20),
+          SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: _execute, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF009688)), child: const Text('تنفيذ التحويل', style: TextStyle(color: Colors.white))))
+        ])))),
       ),
     );
   }
+}
+
+class HistoryPage extends StatelessWidget {
+  final List<String> history;
+  const HistoryPage({super.key, required this.history});
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('سجل التحويلات'), backgroundColor: const Color(0xFF009688)), body: ListView.builder(itemCount: history.length, itemBuilder: (c, i) => ListTile(title: Text(history[i]))));
 }
