@@ -7,107 +7,110 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.6'
           cache: true
 
-      - name: Build App With New Name and Icon
+      - name: Build App Complete
         run: |
           flutter create my_transfer_app --org com.example.app
-          
           mkdir -p my_transfer_app/assets
-          if [ -f "icon.png" ]; then
-            cp icon.png my_transfer_app/assets/icon.png
-          fi
-
+          if [ -f "icon.png" ]; then cp icon.png my_transfer_app/assets/icon.png; fi
           cd my_transfer_app
 
-          # تحديث ملف pubspec.yaml
           cat << 'EOF' > pubspec.yaml
           name: my_transfer_app
-          description: A new Flutter project.
-          publish_to: 'none'
           version: 1.0.0+1
-
-          environment:
-            sdk: '>=3.0.0 <4.0.0'
-
+          environment: {sdk: '>=3.0.0 <4.0.0'}
           dependencies:
-            flutter:
-              sdk: flutter
+            flutter: {sdk: flutter}
             flutter_phone_direct_caller: ^2.1.1
             shared_preferences: ^2.2.0
-
           dev_dependencies:
             flutter_launcher_icons: ^0.13.1
-
           flutter_launcher_icons:
             android: "launcher_icon"
             image_path: "assets/icon.png"
             min_sdk_android: 21
-
-          flutter:
-            uses-material-design: true
+          flutter: {uses-material-design: true}
           EOF
 
-          # تحديث اسم التطبيق في ملف AndroidManifest.xml (الاسم الخارجي)
           sed -i 's/android:label="my_transfer_app"/android:label="تحويل رصيد سيرياتيل"/g' android/app/src/main/AndroidManifest.xml
 
-          # كتابة كود التطبيق الأساسي مع الاسم الجديد في الـ AppBar
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'package:shared_preferences/shared_preferences.dart';
           import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
-          void main() { runApp(const TransferApp()); }
-
-          class TransferApp extends StatelessWidget {
-            const TransferApp({super.key});
-            @override
-            Widget build(BuildContext context) {
-              return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                theme: ThemeData(primarySwatch: Colors.teal),
-                home: const Directionality(textDirection: TextDirection.rtl, child: TransferPage()),
-              );
-            }
-          }
+          void main() => runApp(const MaterialApp(home: TransferPage(), debugShowCheckedModeBanner: false));
 
           class TransferPage extends StatefulWidget { const TransferPage({super.key}); @override State<TransferPage> createState() => _TransferPageState(); }
 
           class _TransferPageState extends State<TransferPage> {
             final TextEditingController phoneController = TextEditingController();
             final TextEditingController pinController = TextEditingController();
-            Map<String, dynamic>? selectedAmount;
+            final TextEditingController amountController = TextEditingController();
             
-            // ... (باقي الكود كما هو)
+            final List<Map<String, String>> prices = [
+              {"base": "1.92", "taxed": "2"}, {"base": "2.88", "taxed": "3"}, {"base": "3.84", "taxed": "4"},
+              {"base": "4.80", "taxed": "5"}, {"base": "5.76", "taxed": "6"}, {"base": "9.61", "taxed": "10"},
+              {"base": "20.19", "taxed": "21"}, {"base": "23.07", "taxed": "24"}, {"base": "24.03", "taxed": "25"},
+              {"base": "25.96", "taxed": "27"}, {"base": "30.76", "taxed": "32"}, {"base": "40.38", "taxed": "42"},
+              {"base": "45.19", "taxed": "47"}, {"base": "48.07", "taxed": "50"}, {"base": "52.88", "taxed": "55"},
+              {"base": "62.5", "taxed": "65"}, {"base": "68.26", "taxed": "71"}, {"base": "72.11", "taxed": "75"},
+              {"base": "77.88", "taxed": "81"}, {"base": "81.73", "taxed": "85"}, {"base": "86.53", "taxed": "90"},
+              {"base": "96.15", "taxed": "100"}, {"base": "100.96", "taxed": "105"}, {"base": "105.76", "taxed": "110"},
+              {"base": "115.38", "taxed": "120"}, {"base": "125", "taxed": "130"}, {"base": "130.76", "taxed": "136"},
+              {"base": "144.23", "taxed": "150"}, {"base": "160.57", "taxed": "167"}, {"base": "163.46", "taxed": "170"},
+              {"base": "173.07", "taxed": "180"}, {"base": "183.65", "taxed": "191"}, {"base": "192.30", "taxed": "200"},
+              {"base": "211.53", "taxed": "220"}, {"base": "240.38", "taxed": "250"}, {"base": "288.46", "taxed": "300"},
+              {"base": "317.30", "taxed": "330"}, {"base": "370.19", "taxed": "385"}, {"base": "432.69", "taxed": "450"},
+              {"base": "480.76", "taxed": "500"}, {"base": "576.92", "taxed": "600"}, {"base": "625.00", "taxed": "625"},
+              {"base": "650", "taxed": "650"}, {"base": "721.15", "taxed": "721"}, {"base": "750", "taxed": "750"},
+              {"base": "769.23", "taxed": "769"}, {"base": "800", "taxed": "800"}, {"base": "951.92", "taxed": "951"},
+              {"base": "990", "taxed": "990"}, {"base": "1057.69", "taxed": "1057"}, {"base": "1100", "taxed": "1100"},
+              {"base": "1250.00", "taxed": "1250"}, {"base": "1300", "taxed": "1300"}, {"base": "1923.07", "taxed": "1923"},
+              {"base": "2000", "taxed": "2000"}, {"base": "2115.38", "taxed": "2115"}, {"base": "2200", "taxed": "2200"},
+              {"base": "2403.84", "taxed": "2403"}, {"base": "2500", "taxed": "2500"}, {"base": "3846.15", "taxed": "3846"},
+              {"base": "4000", "taxed": "4000"}
+            ];
+
+            @override
+            void initState() { super.initState(); SharedPreferences.getInstance().then((p) => setState(() => pinController.text = p.getString('pin') ?? '')); }
+
+            void _execute() async {
+              String base = amountController.text;
+              String phone = phoneController.text;
+              String pin = pinController.text;
+              // الكود حسب طلبك: *150*1*الرقم السري*1*كمية التحويل*رقم الزبون*رقم الزبون#
+              String ussd = "*150*1*$pin*1*$base*$phone*$phone%23";
+              await FlutterPhoneDirectCaller.callNumber(ussd);
+            }
+
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                appBar: AppBar(
-                  title: const Text('تحويل رصيد سيرياتيل', style: TextStyle(fontWeight: FontWeight.bold)),
-                  centerTitle: true,
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                ),
-                body: Container( /* ... تصميم الصفحة كما هو ... */ ),
+                appBar: AppBar(title: const Text('تحويل رصيد سيرياتيل'), backgroundColor: Colors.teal),
+                body: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(children: [
+                  TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'رقم الزبون')),
+                  DropdownButtonFormField<Map<String, String>>(
+                    decoration: const InputDecoration(labelText: 'اختر فئة التعبئة'),
+                    items: prices.map((p) => DropdownMenuItem(value: p, child: Text('فئة ${p['base']} ل.س (تصبح ${p['taxed']} ل.س)'))).toList(),
+                    onChanged: (v) => setState(() => amountController.text = v!['base']!),
+                  ),
+                  TextField(controller: amountController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'كمية التحويل (القيمة الأساسية)')),
+                  TextField(controller: pinController, obscureText: true, onChanged: (v) => SharedPreferences.getInstance().then((p) => p.setString('pin', v)), decoration: const InputDecoration(labelText: 'الرقم السري')),
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: _execute, child: const Text('تنفيذ التحويل'))
+                ])),
               );
             }
           }
           EOF
-
-          # البناء
           flutter pub get
           dart run flutter_launcher_icons
-          
-          file="android/app/build.gradle"
-          if [ -f "$file" ]; then
-            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' "$file"
-            sed -i 's/minSdkVersion 16/minSdkVersion 21/g' "$file"
-          fi
-
+          sed -i 's/minSdkVersion 16/minSdkVersion 21/g' android/app/build.gradle
           flutter build apk --release
 
       - name: Upload APK
